@@ -35,8 +35,6 @@ jobs:
         git config user.email "builds@travis-ci.com"
         git config user.name "Travis CI"
       script: |-
-        set -e
-        export NODE_ENV="production"
 
         # Start docker compose service
         docker-compose up -d
@@ -45,10 +43,10 @@ jobs:
         yarn && yarn test
 
         # build the final image
-        docker build -t  .
+        docker build -t travis-test-public:1.0.0 .
 
-      deploy:
-        echo start deploy...
+     # deploy:
+      #  echo start deploy...
         ### upload to ecr
         # - provider: script
         #   script: >-
