@@ -1,0 +1,13 @@
+version: '3.4'
+
+services:
+  mongo:
+    image: mongo:4.4.0
+    ports:
+      - 27017:27017
+  redis:
+    image: redis:3.2.12-alpine
+    ports:
+      - target: 6379
+        published: 6379
+        mode: host
