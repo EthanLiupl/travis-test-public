@@ -13,6 +13,8 @@ jobs:
       language: node_js
       node_js: 12
       before_install: |-
+        echo ========${TRAVIS_BRANCH}
+
         if [ "master" == "${TRAVIS_BRANCH}" ]; then
           for env_value in $(compgen -v |grep '.*_PRODUCTION$'); do
             eval export ${env_value%_PRODUCTION}="${!env_value}"
