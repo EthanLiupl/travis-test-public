@@ -37,7 +37,7 @@ jobs:
         yarn && yarn test
 
         # build the final image
-        # docker build -t tap-now-backend-service:latest .
+        # docker build -t tap-now-service-backend:latest .
 
      # deploy:
       #  echo start deploy...
