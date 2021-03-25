@@ -1,11 +1,9 @@
 dist: xenial
 os: linux
 language: shell
-
 stages:
   - name: 'Test, Build and Deploy'
     if: branch =~ ^master$|^development$|^release
-
 jobs:
   include:
     - stage: 'Test, Build and Deploy'
@@ -13,38 +11,28 @@ jobs:
       language: node_js
       node_js: 12
       before_install: |-
-        if [ "master" == "${TRAVIS_BRANCH}" ]; then
-          for env_value in $(compgen -v |grep '.*_PRODUCTION$'); do
-            eval export ${env_value%_PRODUCTION}="${!env_value}"
-          done
-        elif [[ "${TRAVIS_BRANCH}" == release*  ]]; then
-          for env_value in $(compgen -v |grep '.*_STAGING$'); do
-            eval export ${env_value%_STAGING}="${!env_value}"
-          done
-        else
-          for env_value in $(compgen -v |grep '.*_DEVELOPMENT$'); do
-            eval export ${env_value%_DEVELOPMENT}="${!env_value}"
-          done
-        fi
+        echo $TRAVIS_COMMIT
+        echo $TRAVIS_TAG  
+        echo $TRAVIS_BRANCH
+        echo $TRAVIS_BUILD_NUMBER
+        echo $TRAVIS_REPO_SLUG
+        
       install: |-
         # install awscli v2 for ecr upload
-        curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "/tmp/awscliv2.zip"
-        unzip /tmp/awscliv2.zip -d /tmp
-        sudo /tmp/aws/install
+        # curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "/tmp/awscliv2.zip"
+        # unzip /tmp/awscliv2.zip -d /tmp
+        # sudo /tmp/aws/install
+        
       before_script: |
         git config user.email "builds@travis-ci.com"
         git config user.name "Travis CI"
       script: |-
-
         # Start docker compose service
         docker-compose up -d
-
         # Run test
         yarn && yarn test
-
         # build the final image
-        docker build -t travis-test-public:1.0.0 .
-
+        # docker build -t tap-now-service-backend:latest .
      # deploy:
       #  echo start deploy...
         ### upload to ecr
