@@ -1,11 +1,9 @@
 dist: xenial
 os: linux
 language: shell
-
 stages:
   - name: 'Test, Build and Deploy'
-    if: branch =~ ^master$|^develop$|^release
-
+    if: branch =~ ^master$|^development$|^release
 jobs:
   include:
     - stage: 'Test, Build and Deploy'
@@ -28,17 +26,13 @@ jobs:
       before_script: |
         git config user.email "builds@travis-ci.com"
         git config user.name "Travis CI"
-
       script: |-
         # Start docker compose service
         docker-compose up -d
-
         # Run test
         yarn && yarn test
-
         # build the final image
-        # docker build -t tap-now-backend-service:latest .
-
+        # docker build -t tap-now-service-backend:latest .
      # deploy:
       #  echo start deploy...
         ### upload to ecr
