@@ -45,10 +45,7 @@ jobs:
             && aws configure set aws_secret_access_key "${AWS_ECR_SECRET_ACCESS_KEY}"
             && aws ecr get-login-password --region ${AWS_REGION}| docker login --username AWS --password-stdin ${AWS_REGISTRY_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
             && docker push "${IMAGE_LATEST}"
-            && aws ssm send-command
-            --document-name "AWS-RunShellScript" 
-            --targets '[{"Key":"InstanceIds","Values":["i-0b7c9597168140c61"]}]' 
-            --parameters '{"commands":["sh /home/ec2-user/scripts/travis-test-public/restart.dev.sh"]}'
+            && aws ssm send-command --document-name "AWS-RunShellScript" --targets '[{"Key":"InstanceIds","Values":["i-0b7c9597168140c61"]}]' --parameters '{"commands":["sh /home/ec2-user/scripts/travis-test-pulic/restart.dev.sh"]}'
           cleanup: false
           on:
             all_branches: true
