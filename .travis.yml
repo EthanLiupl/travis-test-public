@@ -9,19 +9,21 @@ jobs:
     - stage: "Test, Build and Deploy"
       name: "Lint, Unit Test, Build and Deploy"
       language: node_js
-      node_js: 12
+      node_js: 14
       before_install: |-
-        echo $TRAVIS_COMMIT
-        echo $TRAVIS_TAG  
-        echo $TRAVIS_BRANCH
-        echo $TRAVIS_BUILD_NUMBER
-        echo $TRAVIS_REPO_SLUG
+        set -e
+        ## use auto incremental travis build number for image tag for version comparison
+        tag_build_num="v${TRAVIS_BUILD_NUMBER}-build"
+        export IMAGE="${AWS_REGISTRY_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_ECR_NAME}:$tag_build_num"
+        export IMAGE_LATEST="${AWS_REGISTRY_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_ECR_NAME}:latest"
 
       install: |-
         # install awscli v2 for ecr upload
-        # curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "/tmp/awscliv2.zip"
-        # unzip /tmp/awscliv2.zip -d /tmp
-        # sudo /tmp/aws/install
+        curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "/tmp/awscliv2.zip"
+        unzip /tmp/awscliv2.zip -d /tmp
+        sudo /tmp/aws/install
+
+        export ECR_LOGIN="aws ecr get-login-password --region ${AWS_REGION}| docker login --username AWS --password-stdin ${AWS_REGISTRY_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
 
       before_script: |
         git config user.email "builds@travis-ci.com"
@@ -29,23 +31,20 @@ jobs:
       script: |-
         # Start docker compose service
         docker-compose up -d
+
         # Run test
-        yarn && yarn test
+        npm install && npm run test
+
         # build the final image
-        docker build -t travis-test-public:1.0.0 .
-        docker tag travis-test-public:1.0.0 718530286671.dkr.ecr.us-east-2.amazonaws.com/travis-test-public:latest
+        docker build -t "${IMAGE}" -t "${IMAGE_LATEST}" .
+
       deploy:
         ## upload to ecr
         - provider: script
           script: >-
-            AWS_REGISTRY_ID=718530286671
-            AWS_REGION=us-east-2
-            AWS_ACCESS_KEY_ID=AKIA2OS56CRH4SJYDR5U
-            AWS_SECRET_ACCESS_KEY=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
-            aws ecr get-login-password --region ${AWS_REGION}| docker login --username AWS --password-stdin
-            ${AWS_REGISTRY_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
-            && docker push 718530286671.dkr.ecr.us-east-2.amazonaws.com/travis-test-public:latest
-            &&  aws ssm send-command
+            $(AWS_ACCESS_KEY_ID=${AWS_ECR_ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${AWS_ECR_SECRET_ACCESS_KEY} ${ECR_LOGIN})
+            && docker push "${IMAGE_LATEST}"
+            && aws ssm send-command
             --document-name "AWS-RunShellScript" 
             --targets '[{"Key":"InstanceIds","Values":["i-0b7c9597168140c61"]}]' 
             --parameters '{"commands":["sh /home/ec2-user/scripts/travis-test-public/restart.dev.sh"]}'
