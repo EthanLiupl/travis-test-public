@@ -36,9 +36,9 @@ jobs:
         ## upload to ecr
         - provider: script
           script: >-
-            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "/tmp/awscliv2.zip" &&
-            unzip /tmp/awscliv2.zip -d /tmp &&
-            sudo /tmp/aws/install &&
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "/tmp/awscliv2.zip"
+            && unzip /tmp/awscliv2.zip -d /tmp &&
+            && sudo /tmp/aws/install
             && aws configure set region "${AWS_REGION}"
             && aws configure set output json
             && aws configure set aws_access_key_id "${AWS_ECR_ACCESS_KEY_ID}"
