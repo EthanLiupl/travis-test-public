@@ -40,8 +40,10 @@ jobs:
         ## upload to ecr
         - provider: script
           script: >-
-            AWS_ACCESS_KEY_ID=$AWS_ECR_ACCESS_KEY_ID
-            AWS_SECRET_ACCESS_KEY=$AWS_ECR_SECRET_ACCESS_KEY
+            aws configure set region "${AWS_REGION}"
+            aws configure set output json
+            aws configure set aws_access_key_id "${AWS_ECR_ACCESS_KEY_ID}"
+            aws configure set aws_secret_access_key "${AWS_ECR_SECRET_ACCESS_KEY}"
             aws ecr get-login-password --region ${AWS_REGION}| docker login --username AWS --password-stdin ${AWS_REGISTRY_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
             && docker push "${IMAGE_LATEST}"
             && aws ssm send-command
