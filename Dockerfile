@@ -1,7 +1,7 @@
 ## Install Stage
 # - install stage image will also be used in travis for test, building swagger
 # - https://github.com/hk01-digital/docker-node
-FROM node:12.16.3
+FROM node:14.16.0
 
 WORKDIR /home/node/app
 
