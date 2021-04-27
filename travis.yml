@@ -1,0 +1,52 @@
+dist: xenial
+os: linux
+language: shell
+
+sudo: required
+
+before_cache:
+  # Save tagged docker images
+  - >
+    mkdir -p $HOME/docker && docker images -a --filter='dangling=false' --format '{{.Repository}}:{{.Tag}} {{.ID}}'
+    | xargs -n 2 -t sh -c 'test -e $HOME/docker/$1.tar.gz || docker save $0 | gzip -2 > $HOME/docker/$1.tar.gz'
+
+cache:
+  bundler: true
+  directories:
+    - $HOME/docker
+
+stages:
+  - name: "Test, Build and Deploy"
+    if: branch =~ ^master$|^development$|^release|^staging
+
+after_failure:
+  - cat log.txt
+  - cat db.json
+
+jobs:
+  include:
+    - stage: "Test, Build and Deploy"
+      name: "Lint, Unit Test, Build and Deploy"
+      language: node_js
+      node_js: 14
+      before_install:
+        # Load cached docker images
+        - if [[ -d $HOME/docker ]]; then ls $HOME/docker/*.tar.gz | xargs -I {file} sh -c "zcat {file} | docker load"; fi
+        ## use auto incremental travis build number for image tag for version comparison
+        - set -e tag_build_num="v${TRAVIS_BUILD_NUMBER}-build"
+      install:
+        # Start docker compose service
+        - docker-compose up -d
+
+        # Install npm packages
+        - yarn install
+
+        # Set images name
+        - export IMAGE="${AWS_REGISTRY_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_ECR_NAME}:$tag_build_num"
+        - export IMAGE_LATEST="${AWS_REGISTRY_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_ECR_NAME}:latest"
+        - export IMAGE_MIGRATION="${AWS_REGISTRY_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_MIGRATION_ECR_NAME}:$tag_build_num"
+        - export IMAGE_MIGRATION_LATEST="${AWS_REGISTRY_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_MIGRATION_ECR_NAME}:latest"
+
+      script:
+        # Run test
+        - yarn test
