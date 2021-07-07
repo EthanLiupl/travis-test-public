@@ -1,4 +1,4 @@
-version: '3.4'
+version: "3.4"
 
 services:
   mongo:
@@ -7,7 +7,16 @@ services:
       - 27017:27017
   redis:
     image: redis:3.2.12-alpine
+    command: redis-server --requirepass 123456
     ports:
-      - target: 6379
-        published: 6379
-        mode: host
+      - 6379:6379
+  mysql:
+    image: mysql/mysql-server:8.0
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_USER=general-user
+      - MYSQL_PASSWORD=password
+      - MYSQL_DATABASE=tap_now
+    ports:
+      - 3306:3306
